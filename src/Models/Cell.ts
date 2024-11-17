@@ -17,6 +17,18 @@ export default class Cell {
         this.color = color;
     }
 
+    public static blank = (row: number, col: number) => {
+        return new Cell(row, col, CellTypeEnum.BLANK, CellColorEnum.BLANK);
+    }
+
+    public static unavailable = (row: number, col: number) => {
+        return new Cell(row, col, CellTypeEnum.UNAVAILABLE, CellColorEnum.UNAVAILABLE);
+    }
+
+    public static purple = (row: number, col: number) => {
+        return new Cell(row, col, CellTypeEnum.MOVABLE, CellColorEnum.PURPLE);
+    }
+
     public setGrid = (grid: Grid) => {
         this.grid = grid;
         return this;
@@ -69,5 +81,16 @@ export default class Cell {
         }));
 
         return this;
+    }
+
+    public render = () => {
+        switch (this.type) {
+            case CellTypeEnum.UNAVAILABLE:
+                return `<div class="w-full"></div>`
+            default :
+                return `<div class="w-full border border-gray-500 rounded-sm bg-white p-1">
+                            <div class="bg-[${this.color}] rounded-sm w-[75px] h-[75px]"></div>
+                        </div>`
+        }
     }
 }
