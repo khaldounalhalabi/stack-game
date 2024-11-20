@@ -1,50 +1,30 @@
 import Cell from "./Cell.ts";
+import {CellColorEnum} from "../Enums/CellColorEnum.ts";
 
 export default class Grid {
     public columns: number = 0;
     public rows: number = 0;
     public cells: Array<Cell> = [];
     public grid: Array<Array<Cell>> = [];
+    public allowedSteps = 0
 
-    constructor(columns: number, rows: number, cells: Array<Cell>) {
+    constructor(columns: number, rows: number, allowedSteps: number, cells: Array<Cell>) {
         this.columns = columns;
         this.rows = rows;
         this.cells = cells;
-        for (let i = 0; i < rows; i++) {
-            this.grid.push(this.cells.slice(i * this.columns, (i + 1) * this.columns));
-        }
-    }
-
-    public updateGrid = () => {
-        this.cells.forEach(cell => {
-            this.grid[cell.row][cell.col] = cell;
-        })
-
-        for (let rows = 0; rows < this.rows; rows++) {
-            for (let columns = 0; columns < this.columns; columns++) {
-                this.grid[rows][columns].setGrid(this);
-            }
-        }
-
-        return this;
-    }
-
-    public changeCellPosition = (cell: Cell, newRow: number, newColumn: number) => {
+        this.allowedSteps = allowedSteps;
         for (let i = 0; i < this.rows; i++) {
-            if (this.cells[i].row == cell.row && this.cells[i].col == cell.col) {
-                this.cells[i].col = newColumn;
-                this.cells[i].row = newRow;
-                break;
+            this.grid[i] = [];
+            for (let j = 0; j < this.columns; j++) {
+                this.grid[i][j] = this.cells.filter(cell => (cell.row == i && cell.col == j))?.[0] ?? Cell.blank(i, j);
             }
         }
-
-        return this;
     }
 
     public each = (callable: ((cell: Cell) => boolean | void)) => {
         for (let row = 0; row < this.rows; row++) {
             for (let column = 0; column < this.columns; column++) {
-                if (callable(this.grid[row][column]) === false) {
+                if (callable(this.cell(row, column)) === false) {
                     break;
                 }
             }
@@ -60,22 +40,96 @@ export default class Grid {
     }
 
     public render = () => {
-        const renderedCells: string[] = [];
+        const gridCols = `w-full grid grid-cols-${this.columns}`
+        const gridView = document.createElement('div')
+        gridView.className = gridCols;
         this.each((cell) => {
-            renderedCells.push(cell.render());
+            gridView.appendChild(cell.render());
         })
-
-        const gridView = `
-            <div class="w-full grid grid-cols-${this.columns}">
-                ${renderedCells.join(' ')}
-            </div>
-        `
 
         const container = document.getElementById('grid-view');
         if (container) {
-            container.innerHTML = `${gridView}`;
+            container.innerHTML = '';
+            container.appendChild(gridView);
+            console.log(this.grid);
         } else {
             alert("There is no grid to show")
         }
+    }
+
+    public cell = (row: number, col: number) => this.grid[row][col];
+    public setCellColor = (row: number, col: number, color: CellColorEnum) => {
+        (this.grid[row][col]).color = color;
+    }
+
+    public move(rowDelta: number, colDelta: number) {
+        let rowStart = (rowDelta == 1) ? this.rows - 2 : 1;
+        let rowEnd = (rowDelta == 1) ? -1 : this.rows;
+        let rowStep = (rowDelta == 1) ? -1 : 1;
+
+        let colStart = (colDelta == 1) ? this.columns - 2 : 1;
+        let colEnd = (colDelta == 1) ? -1 : this.columns;
+        let colStep = (colDelta == 1) ? -1 : 1;
+
+        for (let i = (rowDelta == 0) ? 0 : rowStart; i != rowEnd; i += rowStep) {
+            for (let j = (colDelta == 0) ? 0 : colStart; j != colEnd; j += colStep) {
+                if (this.cell(i, j).isBlank() || this.cell(i, j).isObstacle()) {
+                    continue;
+                }
+
+                let k = i;
+                let l = j;
+
+                while (true) {
+                    let nextRow = k + rowDelta;
+                    let nextCol = l + colDelta;
+
+                    if (nextRow < 0 || nextRow >= this.rows || nextCol < 0 || nextCol >= this.columns) {
+                        break;
+                    }
+
+                    if (this.cell(nextRow, nextCol).color == this.cell(k, l).color) {
+                        //TODO:: decrease color count
+                        (this.grid[k][l]) = Cell.blank(k, l);
+                    } else if (this.cell(nextRow, nextCol).isObstacle()) {
+                        break;
+                    } else if (this.cell(nextRow, nextCol).isBlank()) {
+                        //TODO:: decrease color count
+                        (this.grid[nextRow][nextCol]) = (this.grid[k][l]);
+                        (this.grid[nextRow][nextCol]).col = nextCol;
+                        (this.grid[nextRow][nextCol]).row = nextRow;
+                        (this.grid[nextRow][nextCol]).type = (this.grid[k][l]).type;
+                        (this.grid[k][l]) = Cell.blank(k, l);
+                    } else {
+                        break;
+                    }
+
+                    k = nextRow;
+                    l = nextCol;
+                }
+            }
+        }
+
+        this.render();
+    }
+
+    public enableKeyboard = () => {
+        const move = (rowDelta: number, colDelta: number) => this.move(rowDelta, colDelta);
+        document.addEventListener("keydown", (event: KeyboardEvent) => {
+            switch (event.key) {
+                case "ArrowUp":
+                    move(-1, 0);
+                    break;
+                case "ArrowDown":
+                    move(1, 0);
+                    break;
+                case "ArrowLeft":
+                    move(0, -1);
+                    break;
+                case "ArrowRight":
+                    move(0, 1);
+                    break;
+            }
+        });
     }
 }

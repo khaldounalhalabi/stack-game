@@ -5,5 +5,6 @@ export enum CellColorEnum {
     YELLOW = "#C6CB33",
     BLANK = "#FFFFFF",
     OBSTACLE = "#6c6c6c",
-    UNAVAILABLE = ""
+    UNAVAILABLE = "",
+    ORANGE = "#EAB542"
 }
