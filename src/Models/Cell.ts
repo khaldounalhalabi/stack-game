@@ -18,8 +18,8 @@ export default class Cell {
         return new Cell(row, col, CellTypeEnum.BLANK, CellColorEnum.BLANK);
     }
 
-    public static unavailable = (row: number, col: number) => {
-        return new Cell(row, col, CellTypeEnum.UNAVAILABLE, CellColorEnum.UNAVAILABLE);
+    public static obstacle = (row: number, col: number) => {
+        return new Cell(row, col, CellTypeEnum.OBSTACLE, CellColorEnum.OBSTACLE);
     }
 
     public static purple = (row: number, col: number) => {
@@ -36,6 +36,10 @@ export default class Cell {
 
     public static green = (row: number, col: number) => {
         return new Cell(row, col, CellTypeEnum.MOVABLE, CellColorEnum.GREEN);
+    }
+
+    public static blue = (row: number, col: number) => {
+        return new Cell(row, col, CellTypeEnum.MOVABLE, CellColorEnum.BLUE);
     }
 
     public render = () => {

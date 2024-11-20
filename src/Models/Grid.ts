@@ -1,5 +1,4 @@
 import Cell from "./Cell.ts";
-import {CellColorEnum} from "../Enums/CellColorEnum.ts";
 
 export default class Grid {
     public columns: number = 0;
@@ -7,6 +6,7 @@ export default class Grid {
     public cells: Array<Cell> = [];
     public grid: Array<Array<Cell>> = [];
     public allowedSteps = 0
+    public existedColors: Record<string, number> = {};
 
     constructor(columns: number, rows: number, allowedSteps: number, cells: Array<Cell>) {
         this.columns = columns;
@@ -16,9 +16,21 @@ export default class Grid {
         for (let i = 0; i < this.rows; i++) {
             this.grid[i] = [];
             for (let j = 0; j < this.columns; j++) {
-                this.grid[i][j] = this.cells.filter(cell => (cell.row == i && cell.col == j))?.[0] ?? Cell.blank(i, j);
+                const c = this.cells.filter(cell => (cell.row == i && cell.col == j))?.[0] ?? Cell.blank(i, j);
+                this.grid[i][j] = c;
+                if (!c.isBlank() && !c.isObstacle()) {
+                    if (this.existedColors[c.color] !== undefined && this.existedColors[c.color] !== null) {
+                        this.existedColors[c.color] = this.existedColors[c.color] + 1;
+                    } else {
+                        this.existedColors[c.color] = 1;
+                    }
+                }
             }
         }
+    }
+
+    public hasWin = () => {
+        return Object.values(this.existedColors).filter(value => value > 1).length <= 0
     }
 
     public each = (callable: ((cell: Cell) => boolean | void)) => {
@@ -43,6 +55,9 @@ export default class Grid {
         const gridCols = `w-full grid grid-cols-${this.columns} grid-animate`;
         const gridView = document.createElement('div');
         gridView.className = gridCols;
+        const allowedMovesElement = document.createElement('div');
+        allowedMovesElement.className = "w-full flex justify-center items-center mt-10";
+        allowedMovesElement.innerHTML = `Remained actions : ${this.allowedSteps}`
 
         this.each((cell) => {
             const cellElement = cell.render();
@@ -54,7 +69,7 @@ export default class Grid {
         if (container) {
             container.innerHTML = '';
             container.appendChild(gridView);
-            console.log(this.grid);
+            container.appendChild(allowedMovesElement);
         } else {
             alert('There is no grid to show');
         }
@@ -62,11 +77,11 @@ export default class Grid {
 
 
     public cell = (row: number, col: number) => this.grid[row][col];
-    public setCellColor = (row: number, col: number, color: CellColorEnum) => {
-        (this.grid[row][col]).color = color;
-    }
 
     public move(rowDelta: number, colDelta: number) {
+        if (this.allowedSteps <= 0) {
+            return;
+        }
         let rowStart = (rowDelta == 1) ? this.rows - 2 : 1;
         let rowEnd = (rowDelta == 1) ? -1 : this.rows;
         let rowStep = (rowDelta == 1) ? -1 : 1;
@@ -93,12 +108,11 @@ export default class Grid {
                     }
 
                     if (this.cell(nextRow, nextCol).color == this.cell(k, l).color) {
-                        //TODO:: decrease color count
+                        this.existedColors[this.cell(k, l).color] = this.existedColors[this.cell(k, l).color] - 1;
                         (this.grid[k][l]) = Cell.blank(k, l);
                     } else if (this.cell(nextRow, nextCol).isObstacle()) {
                         break;
                     } else if (this.cell(nextRow, nextCol).isBlank()) {
-                        //TODO:: decrease color count
                         (this.grid[nextRow][nextCol]) = (this.grid[k][l]);
                         (this.grid[nextRow][nextCol]).col = nextCol;
                         (this.grid[nextRow][nextCol]).row = nextRow;
@@ -114,12 +128,20 @@ export default class Grid {
             }
         }
 
+        this.allowedSteps--;
+
         this.render();
+
+        return this;
     }
 
     public enableKeyboard = () => {
         const move = (rowDelta: number, colDelta: number) => this.move(rowDelta, colDelta);
         document.addEventListener("keydown", (event: KeyboardEvent) => {
+            if (this.allowedSteps <= 0) {
+                alert("You lost");
+                return this;
+            }
             switch (event.key) {
                 case "ArrowUp":
                     move(-1, 0);
@@ -134,6 +156,14 @@ export default class Grid {
                     move(0, 1);
                     break;
             }
+            if (this.hasWin()) {
+                setTimeout(() => {
+                    alert("You won");
+                }, 300)
+                return;
+            }
         });
+
+        return this;
     }
 }
