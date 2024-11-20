@@ -40,19 +40,23 @@ export default class Cell {
 
     public render = () => {
         let element = document.createElement('div');
+        element.className = "cell w-full border border-gray-500 rounded-sm p-1";
+        element.setAttribute('data-row', String(this.row));
+        element.setAttribute('data-col', String(this.col));
+
         switch (this.type) {
             case CellTypeEnum.UNAVAILABLE:
-                element.className = "w-full"
-                return element
-            default :
-                const color = `bg-[${this.color}]`
-                element.className = "w-full border border-gray-500 rounded-sm bg-white p-1";
+                element.classList.add("bg-gray-300");
+                return element;
+
+            default:
                 const cube = document.createElement('div');
-                cube.className = `${color} rounded-sm w-[75px] h-[75px]`
+                cube.className = `rounded-sm w-[75px] h-[75px] bg-[${this.color}]`;
                 element.appendChild(cube);
-                return element
+                return element;
         }
-    }
+    };
+
 
     public isBlank = () => {
         return this.type == CellTypeEnum.BLANK;
