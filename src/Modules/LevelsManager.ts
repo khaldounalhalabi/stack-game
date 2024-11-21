@@ -3,8 +3,8 @@ import Cell from "../Models/Cell.ts";
 import {Algorithm} from "./Algorithm.ts";
 
 export class LevelsManager {
-    private grid: Grid | undefined;
     private static instance?: LevelsManager = undefined;
+    private grid: Grid | undefined;
 
     constructor() {
     }

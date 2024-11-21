@@ -12,21 +12,6 @@ export class Algorithm {
         this.grid = grid;
     }
 
-    private getNextStates = (grid: Grid, except: Direction | undefined = undefined): Grid[] => {
-        let states: Grid[] = [];
-
-        if (!grid.canMove()) {
-            return [];
-        }
-
-        MovementDirectionEnum.getAll(except).forEach(dir => {
-            const tempGrid = grid.clone();
-            states.push(tempGrid.move(dir));
-        })
-
-        return states;
-    }
-
     public dfs = (): Grid | null => {
         if (!this.grid.canMove()) {
             return null;
@@ -96,7 +81,6 @@ export class Algorithm {
 
         return null;
     }
-
 
     public ucs = (): Grid | null => {
         const queue = new PriorityQueue<{ grid: Grid; cost: number }>(
@@ -169,4 +153,19 @@ export class Algorithm {
 
         return result;
     };
+
+    private getNextStates = (grid: Grid, except: Direction | undefined = undefined): Grid[] => {
+        let states: Grid[] = [];
+
+        if (!grid.canMove()) {
+            return [];
+        }
+
+        MovementDirectionEnum.getAll(except).forEach(dir => {
+            const tempGrid = grid.clone();
+            states.push(tempGrid.move(dir));
+        })
+
+        return states;
+    }
 }
