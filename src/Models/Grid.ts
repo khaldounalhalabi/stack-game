@@ -54,6 +54,20 @@ export default class Grid {
     }
 
     public render = () => {
+        const {gridView, allowedMovesElement} = this.getGridView();
+
+        const container = document.getElementById('grid-view');
+        if (container) {
+            container.innerHTML = '';
+            container.appendChild(gridView);
+            container.appendChild(allowedMovesElement);
+        } else {
+            alert('There is no grid to show');
+        }
+    };
+
+
+    public getGridView() {
         const gridCols = `w-full grid grid-cols-${this.columns} grid-animate`;
         const gridView = document.createElement('div');
         gridView.className = gridCols;
@@ -66,17 +80,8 @@ export default class Grid {
             cellElement.classList.add('cell-animate');
             gridView.appendChild(cellElement);
         });
-
-        const container = document.getElementById('grid-view');
-        if (container) {
-            container.innerHTML = '';
-            container.appendChild(gridView);
-            container.appendChild(allowedMovesElement);
-        } else {
-            alert('There is no grid to show');
-        }
-    };
-
+        return {gridView, allowedMovesElement};
+    }
 
     public cell = (row: number, col: number) => this.grid[row][col];
 

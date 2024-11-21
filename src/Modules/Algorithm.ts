@@ -7,6 +7,7 @@ export class Algorithm {
     public grid: Grid;
     public visitedCount = 0;
     public requiredTime: number = 0;
+    public visitedNodes: Map<string, Grid> = new Map<string, Grid>();
 
     constructor(grid: Grid) {
         this.grid = grid;
@@ -17,7 +18,6 @@ export class Algorithm {
             return null;
         }
 
-        const visited = new Set<string>();
         let stack: Grid[] = [this.grid];
 
         let startTime = performance.now();
@@ -34,11 +34,11 @@ export class Algorithm {
             }
 
             const serializedState = JSON.stringify(currentGrid.grid);
-            if (visited.has(serializedState)) {
+            if (this.visitedNodes.has(serializedState)) {
                 continue;
             }
 
-            visited.add(serializedState);
+            this.visitedNodes.set(serializedState, currentGrid);
             this.visitedCount++;
 
 
@@ -51,7 +51,6 @@ export class Algorithm {
 
     public bfs = () => {
         const queue = [this.grid];
-        const visited = new Set<string>();
         let startTime = performance.now();
 
         while (queue.length > 0) {
@@ -67,11 +66,11 @@ export class Algorithm {
             }
 
             const serializedState = JSON.stringify(currentGrid.grid);
-            if (visited.has(serializedState)) {
+            if (this.visitedNodes.has(serializedState)) {
                 continue;
             }
 
-            visited.add(serializedState);
+            this.visitedNodes.set(serializedState, currentGrid);
             this.visitedCount++;
 
             this.getNextStates(currentGrid).forEach((nextGrid) => {
@@ -86,7 +85,6 @@ export class Algorithm {
         const queue = new PriorityQueue<{ grid: Grid; cost: number }>(
             (a, b) => a.cost - b.cost
         );
-        const visited = new Set<string>();
         queue.enqueue({grid: this.grid, cost: 0});
         let startTime = performance.now();
 
@@ -99,10 +97,10 @@ export class Algorithm {
             }
 
             const serializedState = JSON.stringify(currentGrid.grid);
-            if (visited.has(serializedState)) {
+            if (this.visitedNodes.has(serializedState)) {
                 continue;
             }
-            visited.add(serializedState);
+            this.visitedNodes.set(serializedState, currentGrid);
             this.visitedCount++;
 
             this.getNextStates(currentGrid).forEach((nextGrid) => {
@@ -113,13 +111,13 @@ export class Algorithm {
         return null;
     };
 
-    public recursiveDfs = (currentGrid: Grid, visited: Set<string>): Grid | null => {
+    public recursiveDfs = (currentGrid: Grid): Grid | null => {
         const serializedState = JSON.stringify(currentGrid.grid);
-        if (visited.has(serializedState)) {
+        if (this.visitedNodes.has(serializedState)) {
             return null;
         }
 
-        visited.add(serializedState);
+        this.visitedNodes.set(serializedState, currentGrid);
 
         if (currentGrid.hasWon()) {
             return currentGrid;
@@ -132,7 +130,7 @@ export class Algorithm {
         }
 
         for (const nextGrid of nextStates) {
-            const result = this.recursiveDfs(nextGrid, visited);
+            const result = this.recursiveDfs(nextGrid);
             if (result) {
                 return result;
             }
@@ -142,10 +140,9 @@ export class Algorithm {
     };
 
     public startRecursiveDfs = (): Grid | null => {
-        const visited = new Set<string>();
         let startTime = performance.now();
 
-        const result = this.recursiveDfs(this.grid, visited);
+        const result = this.recursiveDfs(this.grid);
         if (result) {
             const endTime = performance.now();
             this.requiredTime = endTime - startTime;
