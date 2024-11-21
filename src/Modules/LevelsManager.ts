@@ -1,5 +1,6 @@
 import Grid from "../Models/Grid.ts";
 import Cell from "../Models/Cell.ts";
+import {Algorithm} from "./Algorithm.ts";
 
 export class LevelsManager {
     private grid: Grid | undefined;
@@ -18,7 +19,7 @@ export class LevelsManager {
 
     public firstLevel = () => {
 
-        this.grid = new Grid(4, 1, 1, [
+        this.grid = new Grid(4, 1, 2, [
             Cell.purple(0, 0),
             Cell.purple(0, 2),
             Cell.purple(0, 3),
@@ -27,7 +28,6 @@ export class LevelsManager {
     }
 
     public secondLevel = () => {
-        console.log("here")
         this.grid = new Grid(3, 3, 4, [
             Cell.yellow(0, 0),
             Cell.yellow(2, 0),
@@ -202,34 +202,34 @@ export class LevelsManager {
         const levelMatcher = (level: number) => {
             switch (level) {
                 case 1:
-                    this.firstLevel().render().grid?.enableKeyboard();
+                    this.firstLevel().render().initGame();
                     break;
                 case 2:
-                    this.secondLevel().render().grid?.enableKeyboard();
+                    this.secondLevel().render().initGame();
                     break;
                 case 3:
-                    this.thirdLevel().render().grid?.enableKeyboard();
+                    this.thirdLevel().render().initGame();
                     break;
                 case 4:
-                    this.fourthLevel().render().grid?.enableKeyboard();
+                    this.fourthLevel().render().initGame();
                     break;
                 case 5:
-                    this.fifthLevel().render().grid?.enableKeyboard();
+                    this.fifthLevel().render().initGame();
                     break;
                 case 6:
-                    this.sixthLevel().render().grid?.enableKeyboard();
+                    this.sixthLevel().render().initGame();
                     break;
                 case 7:
-                    this.seventhLevel().render().grid?.enableKeyboard();
+                    this.seventhLevel().render().initGame();
                     break;
                 case 8:
-                    this.eighthLevel().render().grid?.enableKeyboard();
+                    this.eighthLevel().render().initGame();
                     break;
                 case 9:
-                    this.ninthLevel().render().grid?.enableKeyboard();
+                    this.ninthLevel().render().initGame();
                     break;
                 case 10:
-                    this.tenthLevel().render().grid?.enableKeyboard();
+                    this.tenthLevel().render().initGame();
                     break;
                 default :
                     break;
@@ -248,7 +248,96 @@ export class LevelsManager {
         return this;
     }
 
-    public getGrid() {
-        return this.grid;
+    public initGame = () => {
+        let handler = undefined;
+        if (this.grid) {
+            handler = new Algorithm(this.grid);
+        }
+        let play = () => {
+            this.grid?.enableKeyboard();
+        };
+
+        const playButton = document.getElementById('select-play');
+        const algButton = document.getElementById('select-algorithm');
+        const algList = document.getElementById('alg-list');
+
+        algButton?.classList.toggle("hidden")
+        playButton?.classList.toggle("hidden");
+
+        playButton?.addEventListener("click", function (e) {
+            e.preventDefault();
+            algButton?.classList.toggle("hidden")
+            playButton.classList.toggle("hidden");
+            play();
+        })
+
+        algButton?.addEventListener("click", function (e) {
+            e.preventDefault();
+            playButton?.classList.toggle("hidden")
+            algButton?.classList.toggle("hidden")
+            algList?.classList?.toggle('hidden')
+        });
+
+        document.querySelectorAll('.alg-button').forEach((btn) => {
+            // @ts-ignore
+            btn.addEventListener("click", function (e: MouseEvent) {
+                e.preventDefault();
+                // @ts-ignore
+                let algorithm = e.target.getAttribute('data-alg');
+
+                switch (algorithm) {
+                    case "dfs":
+                        if (!handler) {
+                            alert("There is no handler")
+                        }
+                        let dfs = handler?.dfs();
+                        if (dfs) {
+                            dfs.render();
+                            setTimeout(() => {
+                                alert("Solution found");
+                                window.location.reload()
+                            }, 500);
+                        } else {
+                            alert("Solution not found");
+                            window.location.reload()
+                        }
+                        break;
+                    case "bfs" :
+                        if (!handler) {
+                            alert("There is no handler")
+                        }
+                        let bfs = handler?.bfs();
+                        if (bfs) {
+                            bfs.render();
+                            setTimeout(() => {
+                                alert("Solution found");
+                                window.location.reload()
+                            }, 500);
+                        } else {
+                            alert("Solution not found");
+                            window.location.reload()
+                        }
+                        break;
+                    case "ucs" :
+                        if (!handler) {
+                            alert("There is no handler")
+                        }
+                        let ucs = handler?.ucs();
+                        if (ucs) {
+                            ucs.render();
+                            setTimeout(() => {
+                                alert("Solution found");
+                                window.location.reload()
+                            }, 500);
+                        } else {
+                            alert("Solution not found");
+                            window.location.reload()
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            })
+        })
     }
 }

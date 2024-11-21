@@ -1,4 +1,6 @@
 import Cell from "./Cell.ts";
+import {MovementDirectionEnum} from "../Enums/MovementDirectionEnum.ts";
+import {Direction} from "../Types/Direction.ts";
 
 export default class Grid {
     public columns: number = 0;
@@ -13,6 +15,10 @@ export default class Grid {
         this.rows = rows;
         this.cells = cells;
         this.allowedSteps = allowedSteps;
+        this.init();
+    }
+
+    public init = () => {
         for (let i = 0; i < this.rows; i++) {
             this.grid[i] = [];
             for (let j = 0; j < this.columns; j++) {
@@ -29,8 +35,12 @@ export default class Grid {
         }
     }
 
-    public hasWin = () => {
+    public hasWon = () => {
         return Object.values(this.existedColors).filter(value => value > 1).length <= 0
+    }
+
+    public canMove = () => {
+        return this.allowedSteps > 0;
     }
 
     public each = (callable: ((cell: Cell) => boolean | void)) => {
@@ -39,14 +49,6 @@ export default class Grid {
                 if (callable(this.cell(row, column)) === false) {
                     break;
                 }
-            }
-        }
-    }
-
-    public eachRow = (rowsHandler: ((cell: Cell[]) => boolean | void)) => {
-        for (let row = 0; row < this.rows; row++) {
-            if (rowsHandler(this.grid[row]) === false) {
-                break;
             }
         }
     }
@@ -78,9 +80,9 @@ export default class Grid {
 
     public cell = (row: number, col: number) => this.grid[row][col];
 
-    public move(rowDelta: number, colDelta: number) {
+    public move({rowDelta, colDelta}: Direction) {
         if (this.allowedSteps <= 0) {
-            return;
+            return this;
         }
         let rowStart = (rowDelta == 1) ? this.rows - 2 : 1;
         let rowEnd = (rowDelta == 1) ? -1 : this.rows;
@@ -89,6 +91,8 @@ export default class Grid {
         let colStart = (colDelta == 1) ? this.columns - 2 : 1;
         let colEnd = (colDelta == 1) ? -1 : this.columns;
         let colStep = (colDelta == 1) ? -1 : 1;
+
+        let isDirty = false;
 
         for (let i = (rowDelta == 0) ? 0 : rowStart; i != rowEnd; i += rowStep) {
             for (let j = (colDelta == 0) ? 0 : colStart; j != colEnd; j += colStep) {
@@ -110,6 +114,7 @@ export default class Grid {
                     if (this.cell(nextRow, nextCol).color == this.cell(k, l).color) {
                         this.existedColors[this.cell(k, l).color] = this.existedColors[this.cell(k, l).color] - 1;
                         (this.grid[k][l]) = Cell.blank(k, l);
+                        isDirty = true;
                     } else if (this.cell(nextRow, nextCol).isObstacle()) {
                         break;
                     } else if (this.cell(nextRow, nextCol).isBlank()) {
@@ -118,6 +123,7 @@ export default class Grid {
                         (this.grid[nextRow][nextCol]).row = nextRow;
                         (this.grid[nextRow][nextCol]).type = (this.grid[k][l]).type;
                         (this.grid[k][l]) = Cell.blank(k, l);
+                        isDirty = true;
                     } else {
                         break;
                     }
@@ -128,7 +134,9 @@ export default class Grid {
             }
         }
 
-        this.allowedSteps--;
+        if (isDirty) {
+            this.allowedSteps--;
+        }
 
         this.render();
 
@@ -136,34 +144,47 @@ export default class Grid {
     }
 
     public enableKeyboard = () => {
-        const move = (rowDelta: number, colDelta: number) => this.move(rowDelta, colDelta);
+        const move = ({rowDelta, colDelta}: Direction) => this.move({rowDelta, colDelta});
         document.addEventListener("keydown", (event: KeyboardEvent) => {
-            if (this.allowedSteps <= 0) {
-                alert("You lost");
+            if (this.allowedSteps <= 0 && !this.hasWon()) {
+                setTimeout(() => {
+                    alert("You lost");
+                    window.location.reload();
+                }, 300)
                 return this;
             }
             switch (event.key) {
                 case "ArrowUp":
-                    move(-1, 0);
+                    move(MovementDirectionEnum.UP);
                     break;
                 case "ArrowDown":
-                    move(1, 0);
+                    move(MovementDirectionEnum.DOWN);
                     break;
                 case "ArrowLeft":
-                    move(0, -1);
+                    move(MovementDirectionEnum.LEFT);
                     break;
                 case "ArrowRight":
-                    move(0, 1);
+                    move(MovementDirectionEnum.RIGHT);
                     break;
             }
-            if (this.hasWin()) {
+            if (this.hasWon()) {
                 setTimeout(() => {
                     alert("You won");
+                    window.location.reload();
                 }, 300)
                 return;
             }
         });
 
         return this;
+    }
+
+    public clone(): Grid {
+        const clonedCells = this.cells.map(cell => cell.clone());
+        const clonedGridArray = this.grid.map(row => row.map(cell => cell.clone()));
+        const clonedGrid = new Grid(this.columns, this.rows, this.allowedSteps, clonedCells);
+        clonedGrid.grid = clonedGridArray;
+        clonedGrid.existedColors = {...this.existedColors};
+        return clonedGrid;
     }
 }

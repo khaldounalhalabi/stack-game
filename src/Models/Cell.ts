@@ -61,15 +61,13 @@ export default class Cell {
         }
     };
 
-
     public isBlank = () => {
         return this.type == CellTypeEnum.BLANK;
     }
 
     public isObstacle = () => this.type == CellTypeEnum.OBSTACLE;
 
-    public makeItBlank = () => {
-        this.color = CellColorEnum.BLANK;
-        return this;
-    }
+    public clone = (): Cell => {
+        return new Cell(this.row, this.col, this.type, this.color);
+    };
 }
