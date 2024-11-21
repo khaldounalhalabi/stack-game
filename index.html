@@ -87,7 +87,7 @@
                 </button>
             </div>
 
-            <div class="flex flex-col items-start">
+            <div class="flex flex-col items-start w-full">
                 <div class="flex w-full justify-end items-center gap-5 px-10">
                     <button id="select-play"
                             class="hidden px-3 py-1 bg-purple-300 hover:bg-purple-400 rounded-md shadow-md">
@@ -100,29 +100,37 @@
                     </button>
                 </div>
 
-                <div id="alg-list" class="hidden">
-                    <div class="flex flex-col items-center gap-5">
+                <div id="alg-list" class="hidden w-full">
+                    <div class="flex flex-col items-center gap-5 w-full">
                         <button data-alg="bfs"
-                                class="alg-button px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded-md shadow-md">
+                                class="alg-button w-full px-3 py-1 bg-red-300 hover:bg-red-400 rounded-md shadow-md">
                             BFS
                         </button>
 
                         <button data-alg="dfs"
-                                class="alg-button px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded-md shadow-md">
+                                class="alg-button w-full px-3 py-1 bg-red-300 hover:bg-red-400 rounded-md shadow-md">
                             DFS
                         </button>
 
                         <button data-alg="ucs"
-                                class="alg-button px-3 py-1 bg-gray-300 hover:bg-gray-400 rounded-md shadow-md">
+                                class="alg-button w-full px-3 py-1 bg-red-300 hover:bg-red-400 rounded-md shadow-md">
                             UCS
+                        </button>
+
+                        <button data-alg="rec-dfs"
+                                class="alg-button w-full px-3 py-1 bg-red-300 hover:bg-red-400 rounded-md shadow-md">
+                            Recursive DFS
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="w-2/3 flex justify-center items-center">
+    <div class="w-2/3 flex justify-center items-center h-[75vh] mt-10 flex-col">
         <div id="grid-view">
+        </div>
+        <div id="statistics">
+
         </div>
     </div>
 </div>

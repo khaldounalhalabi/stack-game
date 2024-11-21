@@ -278,6 +278,20 @@ export class LevelsManager {
             algList?.classList?.toggle('hidden')
         });
 
+        const addStatistics = (visits: number, time: number) => {
+            let v = document.createElement('h1');
+            v.className = "font-bold text-[16px]";
+            v.innerHTML = `Visited Nodes Count Is : ${visits}`;
+
+            let t = document.createElement('h1');
+            t.className = "font-bold text-[16px]";
+            t.innerHTML = `Required Time Is : ${(time / 1000).toFixed(2)}`;
+
+            let s = document.getElementById('statistics')
+            s?.append(v);
+            s?.append(t);
+        }
+
         document.querySelectorAll('.alg-button').forEach((btn) => {
             // @ts-ignore
             btn.addEventListener("click", function (e: MouseEvent) {
@@ -334,9 +348,28 @@ export class LevelsManager {
                             window.location.reload()
                         }
                         break;
+
+                    case "rec-dfs" :
+                        if (!handler) {
+                            alert("There is no handler")
+                        }
+                        let recDfs = handler?.startRecursiveDfs();
+                        if (recDfs) {
+                            recDfs.render();
+                            setTimeout(() => {
+                                alert("Solution found");
+                                window.location.reload()
+                            }, 500);
+                        } else {
+                            alert("Solution not found");
+                            window.location.reload()
+                        }
+                        break;
                     default:
                         break;
                 }
+
+                addStatistics(handler?.visitedCount ?? 0, handler?.requiredTime ?? 0);
             })
         })
     }
