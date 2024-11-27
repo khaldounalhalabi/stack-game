@@ -348,6 +348,22 @@ export class LevelsManager {
                             window.location.reload()
                         }
                         break;
+                    case "hill-climbing" :
+                        if (!handler) {
+                            alert("There is no handler")
+                        }
+                        let hillClimbing = handler?.hillClimbing();
+                        if (hillClimbing) {
+                            hillClimbing.render();
+                            setTimeout(() => {
+                                alert("Solution found");
+                                window.location.reload()
+                            }, 500);
+                        } else {
+                            alert("Solution not found");
+                            window.location.reload()
+                        }
+                        break;
 
                     case "rec-dfs" :
                         if (!handler) {

@@ -2,12 +2,13 @@ import Grid from "../Models/Grid.ts";
 import {Direction} from "../Types/Direction.ts";
 import {MovementDirectionEnum} from "../Enums/MovementDirectionEnum.ts";
 import {PriorityQueue} from "./PriorityQueue.ts";
+import TreeNode from "./TreeNode.ts";
 
 export class Algorithm {
     public grid: Grid;
     public visitedCount = 0;
     public requiredTime: number = 0;
-    public visitedNodes: Map<string, Grid> = new Map<string, Grid>();
+    public visitedNodes: Map<string, TreeNode> = new Map<string, TreeNode>();
 
     constructor(grid: Grid) {
         this.grid = grid;
@@ -18,63 +19,63 @@ export class Algorithm {
             return null;
         }
 
-        let stack: Grid[] = [this.grid];
+        let stack: TreeNode[] = [new TreeNode(this.grid, MovementDirectionEnum.NOTHING)];
 
         let startTime = performance.now();
         while (stack.length > 0) {
-            const currentGrid = stack.pop();
-            if (!currentGrid) {
+            const currentState = stack.pop();
+            if (!currentState) {
                 continue;
             }
 
-            if (currentGrid.hasWon()) {
+            if (currentState.grid.hasWon()) {
                 const endTime = performance.now();
                 this.requiredTime = endTime - startTime;
-                return currentGrid;
+                return currentState.grid;
             }
 
-            const serializedState = JSON.stringify(currentGrid.grid);
+            const serializedState = JSON.stringify(currentState);
             if (this.visitedNodes.has(serializedState)) {
                 continue;
             }
 
-            this.visitedNodes.set(serializedState, currentGrid);
+            this.visitedNodes.set(serializedState, currentState);
             this.visitedCount++;
 
 
-            this.getNextStates(currentGrid).forEach((nextGrid) => {
+            this.getNextStates(currentState.grid).forEach((nextGrid) => {
                 stack.push(nextGrid);
             });
         }
         return null;
     };
 
-    public bfs = () => {
-        const queue = [this.grid];
+    public bfs = (): Grid | null => {
+        const queue: TreeNode[] = [new TreeNode(this.grid, MovementDirectionEnum.NOTHING)];
         let startTime = performance.now();
 
         while (queue.length > 0) {
-            const currentGrid = queue.shift();
-            if (!currentGrid) {
+            const currentState = queue.shift();
+            if (!currentState) {
                 continue;
             }
 
-            if (currentGrid.hasWon()) {
+            if (currentState.grid.hasWon()) {
                 const endTime = performance.now();
                 this.requiredTime = endTime - startTime;
-                return currentGrid;
+                return currentState.grid;
             }
 
-            const serializedState = JSON.stringify(currentGrid.grid);
+            const serializedState = JSON.stringify(currentState);
             if (this.visitedNodes.has(serializedState)) {
                 continue;
             }
 
-            this.visitedNodes.set(serializedState, currentGrid);
+            this.visitedNodes.set(serializedState, currentState);
             this.visitedCount++;
 
-            this.getNextStates(currentGrid).forEach((nextGrid) => {
-                queue.push(nextGrid);
+            this.getNextStates(currentState.grid).forEach((nextState) => {
+                queue.push(nextState);
             });
         }
 
@@ -82,48 +83,47 @@ export class Algorithm {
     }
 
     public ucs = (): Grid | null => {
-        const queue = new PriorityQueue<{ grid: Grid; cost: number }>(
-            (a, b) => a.cost - b.cost
+        const queue = new PriorityQueue<TreeNode>(
+            (a, b) => a.heuristicCost() - b.heuristicCost()
         );
-        queue.enqueue({grid: this.grid, cost: 0});
+        queue.enqueue(new TreeNode(this.grid, MovementDirectionEnum.NOTHING));
         let startTime = performance.now();
 
         while (!queue.isEmpty()) {
-            const {grid: currentGrid, cost: currentCost} = queue.dequeue()!;
-            if (currentGrid.hasWon()) {
+            const currentState = queue.dequeue()!;
+            if (currentState.grid.hasWon()) {
                 const endTime = performance.now();
                 this.requiredTime = endTime - startTime;
-                return currentGrid;
+                return currentState.grid;
             }
 
-            const serializedState = JSON.stringify(currentGrid.grid);
+            const serializedState = JSON.stringify(currentState);
             if (this.visitedNodes.has(serializedState)) {
                 continue;
             }
-            this.visitedNodes.set(serializedState, currentGrid);
+            this.visitedNodes.set(serializedState, currentState);
             this.visitedCount++;
 
-            this.getNextStates(currentGrid).forEach((nextGrid) => {
-                const moveCost = 1;
-                queue.enqueue({grid: nextGrid, cost: currentCost + moveCost});
+            this.getNextStates(currentState.grid).forEach((nextState) => {
+                queue.enqueue(nextState);
             });
         }
         return null;
     };
 
-    public recursiveDfs = (currentGrid: Grid): Grid | null => {
-        const serializedState = JSON.stringify(currentGrid.grid);
+    public recursiveDfs = (currentState: TreeNode): Grid | null => {
+        const serializedState = JSON.stringify(currentState);
         if (this.visitedNodes.has(serializedState)) {
             return null;
         }
 
-        this.visitedNodes.set(serializedState, currentGrid);
+        this.visitedNodes.set(serializedState, currentState);
 
-        if (currentGrid.hasWon()) {
-            return currentGrid;
+        if (currentState.grid.hasWon()) {
+            return currentState.grid;
         }
 
-        const nextStates = this.getNextStates(currentGrid);
+        const nextStates = this.getNextStates(currentState.grid);
 
         if (nextStates.length === 0) {
             return null;
@@ -141,18 +141,16 @@ export class Algorithm {
 
     public startRecursiveDfs = (): Grid | null => {
         let startTime = performance.now();
-
-        const result = this.recursiveDfs(this.grid);
+        const result = this.recursiveDfs(new TreeNode(this.grid, MovementDirectionEnum.NOTHING));
         if (result) {
             const endTime = performance.now();
             this.requiredTime = endTime - startTime;
         }
-
         return result;
     };
 
-    private getNextStates = (grid: Grid, except: Direction | undefined = undefined): Grid[] => {
-        let states: Grid[] = [];
+    private getNextStates = (grid: Grid, except: Direction | undefined = undefined): TreeNode[] => {
+        let states: TreeNode[] = [];
 
         if (!grid.canMove()) {
             return [];
@@ -160,7 +158,7 @@ export class Algorithm {
 
         MovementDirectionEnum.getAll(except).forEach(dir => {
             const tempGrid = grid.clone();
-            states.push(tempGrid.move(dir));
+            states.push(new TreeNode(tempGrid.move(dir), dir));
         })
 
         return states;

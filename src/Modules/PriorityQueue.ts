@@ -1,6 +1,6 @@
 export class PriorityQueue<T> {
     private items: T[] = [];
-    private comparator: (a: T, b: T) => number;
+    private readonly comparator: (a: T, b: T) => number;
 
     constructor(comparator: (a: T, b: T) => number) {
         this.comparator = comparator;

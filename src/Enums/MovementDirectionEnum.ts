@@ -5,6 +5,7 @@ export class MovementDirectionEnum {
     public static DOWN: Direction = {rowDelta: 1, colDelta: 0};
     public static LEFT: Direction = {rowDelta: 0, colDelta: -1};
     public static RIGHT: Direction = {rowDelta: 0, colDelta: 1};
+    public static NOTHING: Direction = {rowDelta: -1, colDelta: -1};
 
     public static getAll(except: Direction | undefined = undefined) {
         return [
