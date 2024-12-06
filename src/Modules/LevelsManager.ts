@@ -381,6 +381,38 @@ export class LevelsManager {
                             window.location.reload()
                         }
                         break;
+                    case "hill-climbing-bt":
+                        if (!handler) {
+                            alert("There is no handler")
+                        }
+                        let hCBT = handler?.hillClimbingWithBacktracking();
+                        if (hCBT) {
+                            hCBT.render();
+                            setTimeout(() => {
+                                alert("Solution found");
+                                window.location.reload()
+                            }, 500);
+                        } else {
+                            alert("Solution not found");
+                            window.location.reload()
+                        }
+                        break;
+                    case "a-star":
+                        if (!handler) {
+                            alert("There is no handler")
+                        }
+                        let aStar = handler?.aStar();
+                        if (aStar) {
+                            aStar.render();
+                            setTimeout(() => {
+                                alert("Solution found");
+                                window.location.reload()
+                            }, 500);
+                        } else {
+                            alert("Solution not found");
+                            window.location.reload()
+                        }
+                        break;
                     default:
                         break;
                 }

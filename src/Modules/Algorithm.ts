@@ -84,7 +84,7 @@ export class Algorithm {
 
     public ucs = (): Grid | null => {
         const queue = new PriorityQueue<TreeNode>(
-            (a, b) => a.heuristicCost() - b.heuristicCost()
+            (a, b) => a.cost() - b.cost()
         );
         queue.enqueue(new TreeNode(this.grid, MovementDirectionEnum.NOTHING));
         let startTime = performance.now();
@@ -163,4 +163,139 @@ export class Algorithm {
 
         return states;
     }
+
+    public hillClimbing = (): Grid | null => {
+        let currentNode = new TreeNode(this.grid, MovementDirectionEnum.NOTHING);
+        let startTime = performance.now();
+
+        while (true) {
+            if (currentNode.grid.hasWon()) {
+                return currentNode.grid;
+            }
+            const currentHScore = currentNode.hScore();
+
+            if (currentHScore === 0) {
+                const endTime = performance.now();
+                this.requiredTime = endTime - startTime;
+                return currentNode.grid;
+            }
+
+            const serializedState = JSON.stringify(currentNode);
+            if (this.visitedNodes.has(serializedState)) {
+                return null;
+            }
+
+            this.visitedNodes.set(serializedState, currentNode);
+            this.visitedCount++;
+
+            const nextStates = this.getNextStates(currentNode.grid);
+            if (nextStates.length === 0) {
+                return null;
+            }
+
+            let bestNextState = nextStates[0];
+            for (const nextState of nextStates) {
+                if (nextState.hScore() < bestNextState.hScore()) {
+                    bestNextState = nextState;
+                }
+            }
+
+            if (bestNextState.hScore() >= currentHScore) {
+                return null;
+            }
+
+            currentNode = bestNextState;
+        }
+    };
+
+    public hillClimbingWithBacktracking = (): Grid | null => {
+        let currentNode = new TreeNode(this.grid, MovementDirectionEnum.NOTHING);
+        let startTime = performance.now();
+        let stack: TreeNode[] = [currentNode];
+
+        while (stack.length > 0) {
+            currentNode = stack.pop()!;
+            if (currentNode.grid.hasWon()) {
+                const endTime = performance.now();
+                this.requiredTime = endTime - startTime;
+                return currentNode.grid;
+            }
+            const currentHScore = currentNode.hScore();
+
+            if (currentHScore === 0) {
+                const endTime = performance.now();
+                this.requiredTime = endTime - startTime;
+                return currentNode.grid;
+            }
+
+            const serializedState = JSON.stringify(currentNode);
+            if (this.visitedNodes.has(serializedState)) {
+                continue;
+            }
+
+            this.visitedNodes.set(serializedState, currentNode);
+            this.visitedCount++;
+
+            const nextStates = this.getNextStates(currentNode.grid);
+            nextStates.sort((a, b) => a.hScore() - b.hScore());
+
+            let improved = false;
+            for (const nextState of nextStates) {
+                if (nextState.hScore() < currentHScore) {
+                    stack.push(nextState);
+                    improved = true;
+                    break;
+                }
+            }
+
+            if (!improved) {
+                for (const nextState of nextStates) {
+                    stack.push(nextState);
+                }
+            }
+        }
+        return null;
+    };
+
+    public aStar = (): Grid | null => {
+        const priorityQueue = new PriorityQueue<TreeNode>(
+            (a, b) => (a.aScore) - (b.aScore)
+        );
+        const startNode = new TreeNode(this.grid, MovementDirectionEnum.NOTHING);
+        priorityQueue.enqueue(startNode);
+
+        let startTime = performance.now();
+
+        while (!priorityQueue.isEmpty()) {
+            const currentNode = priorityQueue.dequeue()!;
+            if (currentNode.grid.hasWon()) {
+                const endTime = performance.now();
+                this.requiredTime = endTime - startTime;
+                return currentNode.grid;
+            }
+
+            const serializedState = JSON.stringify(currentNode);
+            if (this.visitedNodes.has(serializedState)) {
+                continue;
+            }
+
+            this.visitedNodes.set(serializedState, currentNode);
+            this.visitedCount++;
+
+            const nextStates = this.getNextStates(currentNode.grid)
+            nextStates.forEach((state) => {
+                state.accumulative = currentNode.accumulative + state.cost();
+            });
+
+            for (const nextState of nextStates) {
+                const tentativeGScore = currentNode.accumulative + currentNode.hScore();
+                if (!this.visitedNodes.has(JSON.stringify(nextState))) {
+                    nextState.aScore = tentativeGScore;
+                    priorityQueue.enqueue(nextState);
+                }
+            }
+        }
+        return null;
+    };
+
 }
